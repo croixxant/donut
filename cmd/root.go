@@ -27,6 +27,8 @@ func newRootCmd() *cobra.Command {
 
 	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	cmd.AddCommand(newWhereCmd())
+
 	return cmd
 }
 
