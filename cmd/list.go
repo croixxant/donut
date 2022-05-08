@@ -1,11 +1,22 @@
 package cmd
 
 import (
-	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 
 	"github.com/croixxant/donut/internal"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 )
+
+type SyncMap struct {
+	Src  string
+	Dest string
+}
+
+var IgnoreFiles = []string{".git", ".gitignore"}
 
 func newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -30,6 +41,59 @@ func newListCmd() *cobra.Command {
 }
 
 func List(cmd *cobra.Command, args []string) error {
-	fmt.Println("list called")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	dotDir, err := internal.GetDotDir()
+	if err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(dotDir)
+	if err != nil {
+		return err
+	}
+	list, err := createSyncMap(entries, dotDir, home)
+	if err != nil {
+		return err
+	}
+
+	tableData := make([][]string, 0, len(list)+1)
+	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
+	for _, v := range list {
+		tableData = append(tableData, []string{v.Src, v.Dest})
+	}
+
+	if err := pterm.DefaultTable.WithHasHeader().WithData(tableData).WithBoxed().Render(); err != nil {
+		return err
+	}
 	return nil
+}
+
+func createSyncMap(entries []fs.DirEntry, srcDir, destDir string) (list []SyncMap, err error) {
+	for _, v := range entries {
+		name := v.Name()
+		if slices.Contains(IgnoreFiles, name) {
+			continue
+		}
+		srcPath := filepath.Join(srcDir, name)
+		destPath := filepath.Join(destDir, name)
+		if !v.IsDir() {
+			list = append(list, SyncMap{
+				Src:  srcPath,
+				Dest: destPath,
+			})
+			continue
+		}
+		entries, err := os.ReadDir(srcPath)
+		if err != nil {
+			return []SyncMap{}, err
+		}
+		childList, err := createSyncMap(entries, srcPath, destPath)
+		if err != nil {
+			return []SyncMap{}, err
+		}
+		list = append(list, childList...)
+	}
+	return list, nil
 }

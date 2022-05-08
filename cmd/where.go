@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"os"
 
 	"github.com/croixxant/donut/internal"
 	"github.com/spf13/cobra"
@@ -32,13 +30,9 @@ func newWhereCmd() *cobra.Command {
 }
 
 func Where(cmd *cobra.Command, _ []string) error {
-	dotDir := internal.GetConfig().GetString("dot_dir")
-	if dotDir == "" {
-		return errors.New("dor_dir is not defined")
-	} else if f, err := os.Stat(dotDir); err != nil {
+	dotDir, err := internal.GetDotDir()
+	if err != nil {
 		return err
-	} else if !f.IsDir() {
-		return fmt.Errorf("%s is not directory", dotDir)
 	}
 
 	fmt.Println(dotDir)
