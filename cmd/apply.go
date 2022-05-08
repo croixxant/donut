@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
 
 	"github.com/croixxant/donut/internal"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +33,55 @@ func newApplyCmd() *cobra.Command {
 }
 
 func Apply(cmd *cobra.Command, args []string) error {
-	fmt.Println("apply called")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	dotDir, err := internal.GetDotDir()
+	if err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(dotDir)
+	if err != nil {
+		return err
+	}
+	list, err := createSyncMap(entries, dotDir, home)
+	if err != nil {
+		return err
+	}
+
+	doList := make([]SyncMap, 0, len(list))
+	for _, v := range list {
+		f, err := os.Lstat(v.Dest)
+		if err != nil {
+			if os.IsNotExist(err) { // if Lstat() returns not exists error
+				doList = append(doList, v)
+				continue
+			}
+			return fmt.Errorf("%s: %w", v.Dest, err) // if Lstat() returns other error
+		}
+
+		if f.Mode()&os.ModeSymlink == 0 { // if not symlink
+			pterm.Warning.Printfln("%s: %s", v.Dest, fs.ErrExist.Error())
+			continue
+		}
+
+		link, err := os.Readlink(v.Dest)
+		if err != nil { // if Readlink() returns error
+			return fmt.Errorf("%s: %w", v.Dest, err)
+		}
+		if link != v.Src { // if link is not same as source path
+			pterm.Warning.Printfln("%s: %s", v.Dest, fs.ErrExist.Error())
+			continue
+		}
+	}
+
+	for _, v := range doList {
+		if err := os.Symlink(v.Src, v.Dest); err != nil {
+			return err
+		}
+		pterm.Success.Printfln("Symlink created. %s from %s", v.Dest, v.Src)
+	}
+
 	return nil
 }
