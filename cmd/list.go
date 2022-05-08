@@ -5,10 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/croixxant/donut/internal"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
+
+	"github.com/croixxant/donut/internal"
 )
 
 type SyncMap struct {

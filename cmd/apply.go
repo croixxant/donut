@@ -5,9 +5,10 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/croixxant/donut/internal"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+
+	"github.com/croixxant/donut/internal"
 )
 
 func newApplyCmd() *cobra.Command {

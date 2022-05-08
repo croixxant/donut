@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/croixxant/donut/cmd"
+
 	"github.com/croixxant/donut/internal"
 )
 
