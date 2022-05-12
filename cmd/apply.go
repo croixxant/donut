@@ -24,7 +24,7 @@ func newApplyCmd() *cobra.Command {
 		Args: cobra.NoArgs,
 		RunE: Apply,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
+			if err := internal.InitConfig(); err != nil {
 				return err
 			}
 			return nil
@@ -38,20 +38,20 @@ func Apply(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	dotDir, err := internal.GetDotDir()
+	cfg, err := internal.GetConfig()
 	if err != nil {
 		return err
 	}
-	entries, err := os.ReadDir(dotDir)
+	sourceDir, err := findSourceDir(cfg)
 	if err != nil {
 		return err
 	}
-	list, err := createSyncMap(entries, dotDir, home)
+	list, err := newFileMaps(sourceDir, home)
 	if err != nil {
 		return err
 	}
 
-	doList := make([]SyncMap, 0, len(list))
+	doList := make([]internal.FileMap, 0, len(list))
 	for _, v := range list {
 		f, err := os.Lstat(v.Dest)
 		if err != nil {

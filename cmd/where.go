@@ -21,7 +21,7 @@ func newWhereCmd() *cobra.Command {
 		Args: cobra.NoArgs,
 		RunE: Where,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
+			if err := internal.InitConfig(); err != nil {
 				return err
 			}
 			return nil
@@ -31,11 +31,15 @@ func newWhereCmd() *cobra.Command {
 }
 
 func Where(cmd *cobra.Command, _ []string) error {
-	dotDir, err := internal.GetDotDir()
+	cfg, err := internal.GetConfig()
+	if err != nil {
+		return err
+	}
+	sourceDir, err := findSourceDir(cfg)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(dotDir)
+	fmt.Println(sourceDir)
 	return nil
 }

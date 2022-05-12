@@ -1,23 +1,11 @@
 package cmd
 
 import (
-	"io/fs"
-	"os"
-	"path/filepath"
-
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	"github.com/croixxant/donut/internal"
 )
-
-type SyncMap struct {
-	Src  string
-	Dest string
-}
-
-var IgnoreFiles = []string{".git", ".gitignore"}
 
 func newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -32,7 +20,18 @@ func newListCmd() *cobra.Command {
 		Args: cobra.NoArgs,
 		RunE: List,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
+			if err := internal.InitConfig(); err != nil {
+				return err
+			}
+			cfg, err := internal.GetConfig()
+			if err != nil {
+				return err
+			}
+			sourceDir, err := findSourceDir(cfg)
+			if err != nil {
+				return err
+			}
+			if err := internal.InitFileMapConfig(sourceDir); err != nil {
 				return err
 			}
 			return nil
@@ -42,19 +41,23 @@ func newListCmd() *cobra.Command {
 }
 
 func List(cmd *cobra.Command, args []string) error {
-	home, err := os.UserHomeDir()
+	cfg, err := internal.GetConfig()
 	if err != nil {
 		return err
 	}
-	dotDir, err := internal.GetDotDir()
+	sourceDir, err := findSourceDir(cfg)
 	if err != nil {
 		return err
 	}
-	entries, err := os.ReadDir(dotDir)
+	fileMapConfig, err := internal.GetFileMapConfig() // Get from config file
 	if err != nil {
 		return err
 	}
-	list, err := createSyncMap(entries, dotDir, home)
+	destinationDir, err := findDestinationDir(fileMapConfig)
+	if err != nil {
+		return err
+	}
+	list, err := newFileMaps(sourceDir, destinationDir)
 	if err != nil {
 		return err
 	}
@@ -69,32 +72,4 @@ func List(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
-}
-
-func createSyncMap(entries []fs.DirEntry, srcDir, destDir string) (list []SyncMap, err error) {
-	for _, v := range entries {
-		name := v.Name()
-		if slices.Contains(IgnoreFiles, name) {
-			continue
-		}
-		srcPath := filepath.Join(srcDir, name)
-		destPath := filepath.Join(destDir, name)
-		if !v.IsDir() {
-			list = append(list, SyncMap{
-				Src:  srcPath,
-				Dest: destPath,
-			})
-			continue
-		}
-		entries, err := os.ReadDir(srcPath)
-		if err != nil {
-			return []SyncMap{}, err
-		}
-		childList, err := createSyncMap(entries, srcPath, destPath)
-		if err != nil {
-			return []SyncMap{}, err
-		}
-		list = append(list, childList...)
-	}
-	return list, nil
 }
