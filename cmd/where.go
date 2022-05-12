@@ -31,11 +31,8 @@ func newWhereCmd() *cobra.Command {
 }
 
 func Where(cmd *cobra.Command, _ []string) error {
-	cfg, err := internal.GetConfig()
-	if err != nil {
-		return err
-	}
-	sourceDir, err := findSourceDir(cfg)
+	cfg := internal.GetConfig()
+	sourceDir, err := cfg.GetSrcDir()
 	if err != nil {
 		return err
 	}

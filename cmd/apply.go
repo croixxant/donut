@@ -34,28 +34,22 @@ func newApplyCmd() *cobra.Command {
 }
 
 func Apply(cmd *cobra.Command, args []string) error {
-	cfg, err := internal.GetConfig()
+	cfg := internal.GetConfig()
+	sourceDir, err := cfg.GetSrcDir()
 	if err != nil {
 		return err
 	}
-	sourceDir, err := findSourceDir(cfg)
+	mapConfig := internal.GetMapConfig() // Get from config file
+	destinationDir, err := mapConfig.GetDestDir()
 	if err != nil {
 		return err
 	}
-	fileMapConfig, err := internal.GetFileMapConfig() // Get from config file
-	if err != nil {
-		return err
-	}
-	destinationDir, err := findDestinationDir(fileMapConfig)
-	if err != nil {
-		return err
-	}
-	list, err := newFileMaps(sourceDir, destinationDir, fileMapConfig.Excludes)
+	list, err := newMap(sourceDir, destinationDir, mapConfig)
 	if err != nil {
 		return err
 	}
 
-	doList := make([]internal.FileMap, 0, len(list))
+	doList := make([]internal.Map, 0, len(list))
 	for _, v := range list {
 		f, err := os.Lstat(v.Dest)
 		if err != nil {

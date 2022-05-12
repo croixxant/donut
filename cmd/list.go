@@ -23,15 +23,12 @@ func newListCmd() *cobra.Command {
 			if err := internal.InitConfig(); err != nil {
 				return err
 			}
-			cfg, err := internal.GetConfig()
+			cfg := internal.GetConfig()
+			sourceDir, err := cfg.GetSrcDir()
 			if err != nil {
 				return err
 			}
-			sourceDir, err := findSourceDir(cfg)
-			if err != nil {
-				return err
-			}
-			if err := internal.InitFileMapConfig(sourceDir); err != nil {
+			if err := internal.InitMapConfig(sourceDir); err != nil {
 				return err
 			}
 			return nil
@@ -41,23 +38,17 @@ func newListCmd() *cobra.Command {
 }
 
 func List(cmd *cobra.Command, args []string) error {
-	cfg, err := internal.GetConfig()
+	cfg := internal.GetConfig()
+	sourceDir, err := cfg.GetSrcDir()
 	if err != nil {
 		return err
 	}
-	sourceDir, err := findSourceDir(cfg)
+	mapConfig := internal.GetMapConfig() // Get from config file
+	destinationDir, err := mapConfig.GetDestDir()
 	if err != nil {
 		return err
 	}
-	fileMapConfig, err := internal.GetFileMapConfig() // Get from config file
-	if err != nil {
-		return err
-	}
-	destinationDir, err := findDestinationDir(fileMapConfig)
-	if err != nil {
-		return err
-	}
-	list, err := newFileMaps(sourceDir, destinationDir, fileMapConfig.Excludes)
+	list, err := newMap(sourceDir, destinationDir, mapConfig)
 	if err != nil {
 		return err
 	}
