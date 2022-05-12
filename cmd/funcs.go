@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ignoreFiles = []string{internal.FileMapConfigName, ".git"}
+	ignoreNames = []string{internal.FileMapConfigName, ".git"}
 )
 
 func findSourceDir(cfg *internal.Config) (string, error) {
@@ -36,7 +36,7 @@ func findDestinationDir(fileMapConfig *internal.FileMapConfig) (string, error) {
 	if fileMapConfig == nil {
 		return os.UserHomeDir()
 	}
-	path := os.ExpandEnv(fileMapConfig.BasePath)
+	path := os.ExpandEnv(fileMapConfig.DestDir)
 	if path == "" {
 		return os.UserHomeDir()
 	} else if fi, err := os.Stat(path); err != nil {
@@ -47,7 +47,7 @@ func findDestinationDir(fileMapConfig *internal.FileMapConfig) (string, error) {
 	return path, nil
 }
 
-func newFileMaps(srcDir, destDir string) (list []internal.FileMap, err error) {
+func newFileMaps(srcDir, destDir string, excludeNames []string) (list []internal.FileMap, err error) {
 	err = filepath.WalkDir(srcDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
 			return nil
@@ -55,7 +55,8 @@ func newFileMaps(srcDir, destDir string) (list []internal.FileMap, err error) {
 		eq := func(s string) bool {
 			return strings.Contains(strings.TrimPrefix(path, srcDir), s)
 		}
-		if slices.IndexFunc(ignoreFiles, eq) != -1 {
+		excludes := append(ignoreNames, excludeNames...)
+		if slices.IndexFunc(excludes, eq) != -1 {
 			return nil
 		}
 		list = append(list, internal.FileMap{

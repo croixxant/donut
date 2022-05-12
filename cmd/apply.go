@@ -34,10 +34,6 @@ func newApplyCmd() *cobra.Command {
 }
 
 func Apply(cmd *cobra.Command, args []string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
 	cfg, err := internal.GetConfig()
 	if err != nil {
 		return err
@@ -46,7 +42,15 @@ func Apply(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	list, err := newFileMaps(sourceDir, home)
+	fileMapConfig, err := internal.GetFileMapConfig() // Get from config file
+	if err != nil {
+		return err
+	}
+	destinationDir, err := findDestinationDir(fileMapConfig)
+	if err != nil {
+		return err
+	}
+	list, err := newFileMaps(sourceDir, destinationDir, fileMapConfig.Excludes)
 	if err != nil {
 		return err
 	}

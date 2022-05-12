@@ -57,7 +57,7 @@ func List(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	list, err := newFileMaps(sourceDir, destinationDir)
+	list, err := newFileMaps(sourceDir, destinationDir, fileMapConfig.Excludes)
 	if err != nil {
 		return err
 	}

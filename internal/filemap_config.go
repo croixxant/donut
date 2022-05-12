@@ -8,9 +8,9 @@ import (
 )
 
 type FileMapConfig struct {
-	ExcludeFiles []string
-	BasePath     string
-	FileMap      []FileMap
+	Excludes []string
+	DestDir  string
+	Files    []FileMap
 }
 
 type FileMap struct {
@@ -26,11 +26,11 @@ func GetFileMapConfig() (*FileMapConfig, error) {
 	return cfg, err
 }
 
-func InitFileMapConfig(dir string) error {
+func InitFileMapConfig(path string) error {
 	fileMapConfig = viper.New()
 
 	fileMapConfig.SetConfigName(FileMapConfigName)
-	fileMapConfig.AddConfigPath(dir)
+	fileMapConfig.AddConfigPath(path)
 	if err := fileMapConfig.ReadInConfig(); err != nil {
 		return fmt.Errorf("Fatal error config file: %w \n", err)
 	}
