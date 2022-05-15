@@ -12,7 +12,7 @@ func TestGetVersion(t *testing.T) {
 		beforeFunc func()
 		want       string
 	}{
-		{"no SetVersion", func() {}, "source"},
+		{"NoSetVersion", func() {}, "source"},
 		{"SetVersion", func() { SetVersion("1.0.0") }, "1.0.0"},
 	}
 	for _, tt := range tests {

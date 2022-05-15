@@ -17,49 +17,54 @@ func newListCmd() *cobra.Command {
 	Cobra is a CLI library for Go that empowers applications.
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
-		Args: cobra.NoArgs,
-		RunE: List,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.InitConfig(); err != nil {
-				return err
-			}
-			cfg := internal.GetConfig()
-			sourceDir, err := cfg.GetSrcDir()
-			if err != nil {
-				return err
-			}
-			if err := internal.InitMapConfig(sourceDir); err != nil {
-				return err
-			}
-			return nil
-		},
+		Args:    cobra.NoArgs,
+		RunE:    List,
+		PreRunE: PreList,
 	}
 	return cmd
 }
 
+func PreList(cmd *cobra.Command, args []string) error {
+	if err := internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME")); err != nil {
+		return err
+	}
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
+		return err
+	}
+	if err := internal.InitMapConfig(internal.WithFile(cfg.SrcDir)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func List(cmd *cobra.Command, args []string) error {
 	cfg := internal.GetConfig()
-	sourceDir, err := cfg.GetSrcDir()
-	if err != nil {
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
 	mapConfig := internal.GetMapConfig() // Get from config file
-	destinationDir, err := mapConfig.GetDestDir()
-	if err != nil {
-		return err
-	}
-	list, err := newMap(sourceDir, destinationDir, mapConfig)
+	destDir, err := internal.DirOrHome(mapConfig.DestDir)
 	if err != nil {
 		return err
 	}
 
-	tableData := make([][]string, 0, len(list)+1)
+	remaps := mapConfig.AbsFiles(cfg.SrcDir, destDir)
+	list := internal.NewMapBuilder(
+		cfg.SrcDir, destDir, internal.WithExcludes(mapConfig.Excludes), internal.WithRemaps(remaps),
+	).Build()
+
+	tableData := make([][]string, 0, len(list)+1) // add header capacity
 	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
 	for _, v := range list {
 		tableData = append(tableData, []string{v.Src, v.Dest})
 	}
 
-	if err := pterm.DefaultTable.WithHasHeader().WithData(tableData).WithBoxed().Render(); err != nil {
+	if err := pterm.DefaultTable.
+		WithHasHeader().
+		WithData(tableData).
+		WithBoxed().
+		Render(); err != nil {
 		return err
 	}
 	return nil

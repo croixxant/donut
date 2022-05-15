@@ -18,25 +18,23 @@ func newWhereCmd() *cobra.Command {
 	Cobra is a CLI library for Go that empowers applications.
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
-		Args: cobra.NoArgs,
-		RunE: Where,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.InitConfig(); err != nil {
-				return err
-			}
-			return nil
-		},
+		Args:    cobra.NoArgs,
+		RunE:    Where,
+		PreRunE: PreWhere,
 	}
 	return cmd
 }
 
+func PreWhere(cmd *cobra.Command, args []string) error {
+	return internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME"))
+}
+
 func Where(cmd *cobra.Command, _ []string) error {
 	cfg := internal.GetConfig()
-	sourceDir, err := cfg.GetSrcDir()
-	if err != nil {
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
 
-	fmt.Println(sourceDir)
+	fmt.Println(cfg.SrcDir)
 	return nil
 }
