@@ -1,22 +1,11 @@
 package cmd
 
 import (
-	"io/fs"
-	"os"
-	"path/filepath"
-
-	"github.com/croixxant/donut/internal"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
+
+	"github.com/croixxant/donut/internal"
 )
-
-type SyncMap struct {
-	Src  string
-	Dest string
-}
-
-var IgnoreFiles = []string{".git", ".gitignore"}
 
 func newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -28,72 +17,55 @@ func newListCmd() *cobra.Command {
 	Cobra is a CLI library for Go that empowers applications.
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
-		Args: cobra.NoArgs,
-		RunE: List,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
-				return err
-			}
-			return nil
-		},
+		Args:    cobra.NoArgs,
+		RunE:    List,
+		PreRunE: PreList,
 	}
 	return cmd
 }
 
-func List(cmd *cobra.Command, args []string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
+func PreList(cmd *cobra.Command, args []string) error {
+	if err := internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME")); err != nil {
 		return err
 	}
-	dotDir, err := internal.GetDotDir()
-	if err != nil {
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
-	entries, err := os.ReadDir(dotDir)
-	if err != nil {
-		return err
-	}
-	list, err := createSyncMap(entries, dotDir, home)
-	if err != nil {
-		return err
-	}
-
-	tableData := make([][]string, 0, len(list)+1)
-	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
-	for _, v := range list {
-		tableData = append(tableData, []string{v.Src, v.Dest})
-	}
-
-	if err := pterm.DefaultTable.WithHasHeader().WithData(tableData).WithBoxed().Render(); err != nil {
+	if err := internal.InitMapConfig(internal.WithFile(cfg.SrcDir)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createSyncMap(entries []fs.DirEntry, srcDir, destDir string) (list []SyncMap, err error) {
-	for _, v := range entries {
-		name := v.Name()
-		if slices.Contains(IgnoreFiles, name) {
-			continue
-		}
-		srcPath := filepath.Join(srcDir, name)
-		destPath := filepath.Join(destDir, name)
-		if !v.IsDir() {
-			list = append(list, SyncMap{
-				Src:  srcPath,
-				Dest: destPath,
-			})
-			continue
-		}
-		entries, err := os.ReadDir(srcPath)
-		if err != nil {
-			return []SyncMap{}, err
-		}
-		childList, err := createSyncMap(entries, srcPath, destPath)
-		if err != nil {
-			return []SyncMap{}, err
-		}
-		list = append(list, childList...)
+func List(cmd *cobra.Command, args []string) error {
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
+		return err
 	}
-	return list, nil
+	mapConfig := internal.GetMapConfig() // Get from config file
+	destDir, err := internal.DirOrHome(mapConfig.DestDir)
+	if err != nil {
+		return err
+	}
+
+	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
+	list := internal.NewMapBuilder(
+		cfg.SrcDir, destDir, internal.WithExcludes(mapConfig.Excludes), internal.WithRemaps(remaps),
+	).Build()
+
+	tableData := make([][]string, 0, len(list)+1) // add header capacity
+	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
+	for _, v := range list {
+		tableData = append(tableData, []string{v.Src, v.Dest})
+	}
+
+	if err := pterm.DefaultTable.
+		WithHasHeader().
+		WithData(tableData).
+		WithBoxed().
+		Render(); err != nil {
+		return err
+	}
+	return nil
 }

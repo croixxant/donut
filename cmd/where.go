@@ -3,8 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/croixxant/donut/internal"
 	"github.com/spf13/cobra"
+
+	"github.com/croixxant/donut/internal"
 )
 
 func newWhereCmd() *cobra.Command {
@@ -17,24 +18,23 @@ func newWhereCmd() *cobra.Command {
 	Cobra is a CLI library for Go that empowers applications.
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
-		Args: cobra.NoArgs,
-		RunE: Where,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
-				return err
-			}
-			return nil
-		},
+		Args:    cobra.NoArgs,
+		RunE:    Where,
+		PreRunE: PreWhere,
 	}
 	return cmd
 }
 
+func PreWhere(cmd *cobra.Command, args []string) error {
+	return internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME"))
+}
+
 func Where(cmd *cobra.Command, _ []string) error {
-	dotDir, err := internal.GetDotDir()
-	if err != nil {
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
 
-	fmt.Println(dotDir)
+	fmt.Println(cfg.SrcDir)
 	return nil
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 
 	"github.com/croixxant/donut/internal"
@@ -27,8 +28,6 @@ func newRootCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 
-	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	cmd.AddCommand(newWhereCmd(), newListCmd(), newApplyCmd())
 
 	return cmd
@@ -38,6 +37,7 @@ func newRootCmd() *cobra.Command {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := newRootCmd().Execute(); err != nil {
+		pterm.Error.Println(err)
 		os.Exit(1)
 	}
 }

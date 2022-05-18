@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"fmt"
+	"errors"
 	"io/fs"
 	"os"
 
-	"github.com/croixxant/donut/internal"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+
+	"github.com/croixxant/donut/internal"
 )
 
 func newApplyCmd() *cobra.Command {
@@ -20,60 +21,55 @@ func newApplyCmd() *cobra.Command {
 	Cobra is a CLI library for Go that empowers applications.
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
-		Args: cobra.NoArgs,
-		RunE: Apply,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := internal.SetConfig(); err != nil {
-				return err
-			}
-			return nil
-		},
+		Args:    cobra.NoArgs,
+		RunE:    Apply,
+		PreRunE: PreApply,
 	}
 	return cmd
 }
 
+func PreApply(cmd *cobra.Command, args []string) error {
+	if err := internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME")); err != nil {
+		return err
+	}
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
+		return err
+	}
+	if err := internal.InitMapConfig(internal.WithFile(cfg.SrcDir)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func Apply(cmd *cobra.Command, args []string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
-	dotDir, err := internal.GetDotDir()
-	if err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(dotDir)
-	if err != nil {
-		return err
-	}
-	list, err := createSyncMap(entries, dotDir, home)
+	mapConfig := internal.GetMapConfig() // Get from config file
+	destDir, err := internal.DirOrHome(mapConfig.DestDir)
 	if err != nil {
 		return err
 	}
 
-	doList := make([]SyncMap, 0, len(list))
+	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
+	list := internal.NewMapBuilder(
+		cfg.SrcDir, destDir, internal.WithExcludes(mapConfig.Excludes), internal.WithRemaps(remaps),
+	).Build()
+
+	doList := make([]internal.Map, 0, len(list))
 	for _, v := range list {
-		f, err := os.Lstat(v.Dest)
-		if err != nil {
-			if os.IsNotExist(err) { // if Lstat() returns not exists error
-				doList = append(doList, v)
+		if err := v.CanLink(); err != nil {
+			if errors.Is(err, internal.ErrAlreadyLinked) {
+				continue
+			} else if errors.Is(err, fs.ErrExist) {
+				pterm.Warning.Println(err)
 				continue
 			}
-			return fmt.Errorf("%s: %w", v.Dest, err) // if Lstat() returns other error
+			return err
 		}
-
-		if f.Mode()&os.ModeSymlink == 0 { // if not symlink
-			pterm.Warning.Printfln("%s: %s", v.Dest, fs.ErrExist.Error())
-			continue
-		}
-
-		link, err := os.Readlink(v.Dest)
-		if err != nil { // if Readlink() returns error
-			return fmt.Errorf("%s: %w", v.Dest, err)
-		}
-		if link != v.Src { // if link is not same as source path
-			pterm.Warning.Printfln("%s: %s", v.Dest, fs.ErrExist.Error())
-			continue
-		}
+		doList = append(doList, v)
 	}
 
 	for _, v := range doList {

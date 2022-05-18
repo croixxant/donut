@@ -1,0 +1,9 @@
+{
+    "gopls": {
+        "formatting.local": "github.com/croixxant/donut/internal"
+    },
+    "go.testTags": "test",
+    "go.testFlags": [
+        "-cover"
+      ],    
+}
