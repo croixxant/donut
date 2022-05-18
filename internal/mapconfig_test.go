@@ -73,3 +73,42 @@ func TestInitMapConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestMapConfigData_AbsFiles(t *testing.T) {
+	type fields struct {
+		Files []Map
+	}
+	type args struct {
+		srcDir  string
+		destDir string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   []Map
+	}{
+		{
+			name: "OK",
+			fields: fields{
+				Files: []Map{
+					{Src: ".config/starship.toml", Dest: ".config/starship.toml"},
+					{Src: ".zshenv", Dest: "/home/gopher/.zshenv"},
+				},
+			},
+			args: args{srcDir: "/home/gopher/.local/share", destDir: "/home/gopher"},
+			want: []Map{
+				{Src: "/home/gopher/.local/share/.config/starship.toml", Dest: "/home/gopher/.config/starship.toml"},
+				{Src: "/home/gopher/.local/share/.zshenv", Dest: "/home/gopher/.zshenv"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &MapConfigData{
+				Files: tt.fields.Files,
+			}
+			assert.Equal(t, tt.want, d.AbsFiles(tt.args.srcDir, tt.args.destDir))
+		})
+	}
+}

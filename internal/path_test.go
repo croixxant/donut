@@ -61,3 +61,23 @@ func TestDirOrHome(t *testing.T) {
 		})
 	}
 }
+
+func TestAbs(t *testing.T) {
+	type args struct {
+		path    string
+		baseDir string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"OK/Abs", args{"/home/gopher/.local/share", ""}, "/home/gopher/.local/share"},
+		{"OK/NotAbs", args{"../.local/share", "/home/gopher/xxx"}, "/home/gopher/.local/share"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, Abs(tt.args.path, tt.args.baseDir))
+		})
+	}
+}
