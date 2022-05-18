@@ -45,9 +45,9 @@ func WithRemaps(s []Map) MapBuilderOption {
 }
 
 func (b *MapBuilder) Build() []Map {
-	remap := map[string]string{}
+	remaps := map[string]string{}
 	for _, m := range b.remaps {
-		remap[m.Src] = m.Dest
+		remaps[m.Src] = m.Dest
 	}
 	var maps []Map
 
@@ -67,7 +67,7 @@ func (b *MapBuilder) Build() []Map {
 		// define destination path
 		dPath := strings.Replace(path, b.srcDir, b.destDir, 1)
 		// remap configured destination path
-		if re := remap[path]; re != "" {
+		if re := remaps[path]; re != "" {
 			dPath = re
 		}
 

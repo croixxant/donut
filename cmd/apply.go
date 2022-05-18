@@ -53,7 +53,7 @@ func Apply(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	remaps := mapConfig.AbsFiles(cfg.SrcDir, destDir)
+	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
 	list := internal.NewMapBuilder(
 		cfg.SrcDir, destDir, internal.WithExcludes(mapConfig.Excludes), internal.WithRemaps(remaps),
 	).Build()

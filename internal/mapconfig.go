@@ -15,7 +15,7 @@ type MapConfig struct {
 type MapConfigData struct {
 	Excludes []string
 	DestDir  string `mapstructure:"dest_dir"`
-	Files    []Map
+	Maps     []Map
 }
 
 var mapConfig *MapConfig = &MapConfig{}
@@ -48,9 +48,9 @@ func InitMapConfig(opts ...Option) error {
 	)))
 }
 
-func (d *MapConfigData) AbsFiles(srcDir string, destDir string) []Map {
-	s := make([]Map, 0, len(d.Files))
-	for _, v := range d.Files {
+func (d *MapConfigData) AbsMaps(srcDir string, destDir string) []Map {
+	s := make([]Map, 0, len(d.Maps))
+	for _, v := range d.Maps {
 		s = append(s, Map{
 			Src:  Abs(v.Src, srcDir),
 			Dest: Abs(v.Dest, destDir),

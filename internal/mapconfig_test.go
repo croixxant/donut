@@ -21,7 +21,7 @@ func TestGetMapConfig(t *testing.T) {
 		{"OK", dir, &MapConfigData{
 			Excludes: nil,
 			DestDir:  destDir,
-			Files:    nil,
+			Maps:     nil,
 		}},
 	}
 	for _, tt := range tests {
@@ -74,9 +74,9 @@ func TestInitMapConfig(t *testing.T) {
 	}
 }
 
-func TestMapConfigData_AbsFiles(t *testing.T) {
+func TestMapConfigData_AbsMaps(t *testing.T) {
 	type fields struct {
-		Files []Map
+		Maps []Map
 	}
 	type args struct {
 		srcDir  string
@@ -91,7 +91,7 @@ func TestMapConfigData_AbsFiles(t *testing.T) {
 		{
 			name: "OK",
 			fields: fields{
-				Files: []Map{
+				Maps: []Map{
 					{Src: ".config/starship.toml", Dest: ".config/starship.toml"},
 					{Src: ".zshenv", Dest: "/home/gopher/.zshenv"},
 				},
@@ -106,9 +106,9 @@ func TestMapConfigData_AbsFiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &MapConfigData{
-				Files: tt.fields.Files,
+				Maps: tt.fields.Maps,
 			}
-			assert.Equal(t, tt.want, d.AbsFiles(tt.args.srcDir, tt.args.destDir))
+			assert.Equal(t, tt.want, d.AbsMaps(tt.args.srcDir, tt.args.destDir))
 		})
 	}
 }
