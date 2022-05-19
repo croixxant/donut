@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -73,6 +74,16 @@ func Apply(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, v := range doList {
+		dirPath := filepath.Dir(v.Dest)
+		if err := internal.IsDir(dirPath); err != nil {
+			if !os.IsNotExist(err) {
+				return err
+			}
+			if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+				return err
+			}
+		}
+
 		if err := os.Symlink(v.Src, v.Dest); err != nil {
 			return err
 		}
