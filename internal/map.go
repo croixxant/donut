@@ -12,6 +12,7 @@ type Map struct {
 	Dest string
 }
 
+var ErrAlreadyExists = errors.New("already exists")
 var ErrAlreadyLinked = errors.New("already linked")
 
 func (m *Map) CanLink() error {
@@ -35,4 +36,15 @@ func (m *Map) CanLink() error {
 		return fmt.Errorf("%s: %s", m.Dest, fs.ErrExist)
 	}
 	return ErrAlreadyLinked
+}
+
+func (m *Map) CanCopy() error {
+	_, err := os.Lstat(m.Dest)
+	if err != nil {
+		if os.IsNotExist(err) { // if Lstat() returns not exists error
+			return nil
+		}
+		return fmt.Errorf("%s: %w", m.Dest, err) // if Lstat() returns other error
+	}
+	return ErrAlreadyExists
 }

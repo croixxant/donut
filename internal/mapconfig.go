@@ -15,8 +15,16 @@ type MapConfig struct {
 type MapConfigData struct {
 	Excludes []string
 	DestDir  string `mapstructure:"dest_dir"`
+	Method   Method
 	Maps     []Map
 }
+
+type Method string
+
+const (
+	MethodLink = "link"
+	MethodCopy = "copy"
+)
 
 var mapConfig *MapConfig = &MapConfig{}
 
@@ -34,6 +42,7 @@ func InitMapConfig(opts ...Option) error {
 			return err
 		}
 		v.SetDefault("dest_dir", home)
+		v.SetDefault("method", MethodCopy)
 	}
 
 	for _, opt := range opts {
