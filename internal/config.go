@@ -23,6 +23,8 @@ func GetConfig() *ConfigData {
 
 type Option func(v *viper.Viper) error
 
+var CfgDirPaths = []string{"$XDG_CONFIG_HOME/" + AppName, "$HOME/.config/" + AppName, "$HOME"}
+
 func WithFile(paths ...string) Option {
 	return func(v *viper.Viper) error {
 		for _, path := range paths {

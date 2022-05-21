@@ -25,7 +25,7 @@ func newListCmd() *cobra.Command {
 }
 
 func PreList(cmd *cobra.Command, args []string) error {
-	if err := internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME")); err != nil {
+	if err := internal.InitConfig(internal.WithFile(internal.CfgDirPaths...)); err != nil {
 		return err
 	}
 	cfg := internal.GetConfig()

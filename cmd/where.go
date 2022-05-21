@@ -26,7 +26,7 @@ func newWhereCmd() *cobra.Command {
 }
 
 func PreWhere(cmd *cobra.Command, args []string) error {
-	return internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME"))
+	return internal.InitConfig(internal.WithFile(internal.CfgDirPaths...))
 }
 
 func Where(cmd *cobra.Command, _ []string) error {
