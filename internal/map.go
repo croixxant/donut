@@ -39,12 +39,17 @@ func (m *Map) CanLink() error {
 }
 
 func (m *Map) CanCopy() error {
-	_, err := os.Lstat(m.Dest)
+	f, err := os.Lstat(m.Dest)
 	if err != nil {
 		if os.IsNotExist(err) { // if Lstat() returns not exists error
 			return nil
 		}
 		return fmt.Errorf("%s: %w", m.Dest, err) // if Lstat() returns other error
 	}
-	return ErrAlreadyExists
+
+	if f.Mode()&os.ModeSymlink != 0 { // if symlink
+		return fmt.Errorf("%s: %w", m.Dest, ErrAlreadyLinked)
+	}
+
+	return nil // if exists, returns noerror
 }
