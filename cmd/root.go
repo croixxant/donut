@@ -28,7 +28,7 @@ func newRootCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 
-	cmd.AddCommand(newWhereCmd(), newListCmd(), newApplyCmd())
+	cmd.AddCommand(newInitCmd(), newWhereCmd(), newListCmd(), newApplyCmd())
 
 	return cmd
 }
