@@ -30,7 +30,7 @@ func newInitCmd() *cobra.Command {
 var defaultConfigPath = "$HOME/.config/donut/donut.toml"
 
 func Init(cmd *cobra.Command, args []string) error {
-	if err := internal.InitConfig(internal.WithFile(internal.CfgDirPaths...)); err != nil {
+	if err := internal.InitConfig(internal.WithFile(appName, cfgDirPaths...)); err != nil {
 		if err := internal.InitConfig(); err != nil {
 			return err
 		}

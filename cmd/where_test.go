@@ -43,9 +43,9 @@ func TestWhere(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
-			tt.beforeFunc(t, filepath.Join(home, internal.AppName+".json"), tt.testdata)
+			tt.beforeFunc(t, filepath.Join(home, appName+".json"), tt.testdata)
 
-			_ = internal.InitConfig(internal.WithFile(home))
+			_ = internal.InitConfig(internal.WithFile(appName, home))
 			var err error
 			s := testutil.CaptureOutput(t, func() { err = Where(nil, nil) })
 			assert.Equal(t, tt.want, s)

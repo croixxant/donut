@@ -11,7 +11,7 @@ import (
 func TestGetMapConfig(t *testing.T) {
 	dir, destDir := t.TempDir(), t.TempDir()
 	data := map[string]interface{}{"dest_dir": destDir}
-	testutil.CreateFile(t, filepath.Join(dir, MapConfigName+".json"), data)
+	testutil.CreateFile(t, filepath.Join(dir, mapConfigName+".json"), data)
 
 	tests := []struct {
 		name string
@@ -21,12 +21,13 @@ func TestGetMapConfig(t *testing.T) {
 		{"OK", dir, &MapConfigData{
 			Excludes: nil,
 			DestDir:  destDir,
+			Method:   MethodCopy,
 			Maps:     nil,
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = InitMapConfig(WithFile(tt.dir))
+			_ = InitMapConfig(WithFile(mapConfigName, tt.dir))
 			assert.Equal(t, tt.want, GetMapConfig())
 		})
 	}
@@ -66,9 +67,9 @@ func TestInitMapConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			if tt.beforeFunc != nil {
-				tt.beforeFunc(t, filepath.Join(dir, MapConfigName+".json"), tt.testdata)
+				tt.beforeFunc(t, filepath.Join(dir, mapConfigName+".json"), tt.testdata)
 			}
-			err := InitMapConfig(WithFile(dir))
+			err := InitMapConfig(WithFile(mapConfigName, dir))
 			tt.assertion(t, err)
 		})
 	}
@@ -76,7 +77,7 @@ func TestInitMapConfig(t *testing.T) {
 
 func TestMapConfigData_AbsMaps(t *testing.T) {
 	type fields struct {
-		Maps []Map
+		Maps map[string]string
 	}
 	type args struct {
 		srcDir  string
@@ -86,20 +87,20 @@ func TestMapConfigData_AbsMaps(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   []Map
+		want   map[string]string
 	}{
 		{
 			name: "OK",
 			fields: fields{
-				Maps: []Map{
-					{Src: ".config/starship.toml", Dest: ".config/starship.toml"},
-					{Src: ".zshenv", Dest: "/home/gopher/.zshenv"},
+				Maps: map[string]string{
+					".config/starship.toml": ".config/starship.toml",
+					".zshenv":               "/home/gopher/.zshenv",
 				},
 			},
 			args: args{srcDir: "/home/gopher/.local/share", destDir: "/home/gopher"},
-			want: []Map{
-				{Src: "/home/gopher/.local/share/.config/starship.toml", Dest: "/home/gopher/.config/starship.toml"},
-				{Src: "/home/gopher/.local/share/.zshenv", Dest: "/home/gopher/.zshenv"},
+			want: map[string]string{
+				"/home/gopher/.local/share/.config/starship.toml": "/home/gopher/.config/starship.toml",
+				"/home/gopher/.local/share/.zshenv":               "/home/gopher/.zshenv",
 			},
 		},
 	}

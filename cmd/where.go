@@ -20,21 +20,13 @@ func newWhereCmd() *cobra.Command {
 	to quickly create a Cobra application.`,
 		Args:    cobra.NoArgs,
 		RunE:    Where,
-		PreRunE: PreWhere,
+		PreRunE: InitConfig,
 	}
 	return cmd
 }
 
-func PreWhere(cmd *cobra.Command, args []string) error {
-	return internal.InitConfig(internal.WithFile(internal.CfgDirPaths...))
-}
-
 func Where(cmd *cobra.Command, _ []string) error {
 	cfg := internal.GetConfig()
-	if err := internal.IsDir(cfg.SrcDir); err != nil {
-		return err
-	}
-
 	fmt.Println(cfg.SrcDir)
 	return nil
 }

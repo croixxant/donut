@@ -11,7 +11,7 @@ import (
 func TestGetConfig(t *testing.T) {
 	home, srcDir := t.TempDir(), t.TempDir()
 	data := map[string]interface{}{"src_dir": srcDir}
-	testutil.CreateFile(t, filepath.Join(home, AppName+".json"), data)
+	testutil.CreateFile(t, filepath.Join(home, appName+".json"), data)
 
 	tests := []struct {
 		name    string
@@ -26,7 +26,7 @@ func TestGetConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = InitConfig(WithFile(tt.homeDir))
+			_ = InitConfig(WithFile(appName, tt.homeDir))
 			assert.Equal(t, tt.want, GetConfig())
 		})
 	}
@@ -58,9 +58,9 @@ func TestInitConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			if tt.beforeFunc != nil {
-				tt.beforeFunc(t, filepath.Join(home, AppName+".json"), tt.testdata)
+				tt.beforeFunc(t, filepath.Join(home, appName+".json"), tt.testdata)
 			}
-			err := InitConfig(WithFile(home))
+			err := InitConfig(WithFile(appName, home))
 			tt.assertion(t, err)
 		})
 	}

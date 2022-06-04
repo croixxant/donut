@@ -19,23 +19,9 @@ func newListCmd() *cobra.Command {
 	to quickly create a Cobra application.`,
 		Args:    cobra.NoArgs,
 		RunE:    List,
-		PreRunE: PreList,
+		PreRunE: InitConfigAndMapConfig,
 	}
 	return cmd
-}
-
-func PreList(cmd *cobra.Command, args []string) error {
-	if err := internal.InitConfig(internal.WithFile(internal.CfgDirPaths...)); err != nil {
-		return err
-	}
-	cfg := internal.GetConfig()
-	if err := internal.IsDir(cfg.SrcDir); err != nil {
-		return err
-	}
-	if err := internal.InitMapConfig(internal.WithFile(cfg.SrcDir)); err != nil {
-		return err
-	}
-	return nil
 }
 
 func List(cmd *cobra.Command, args []string) error {
@@ -50,14 +36,18 @@ func List(cmd *cobra.Command, args []string) error {
 	}
 
 	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
-	list := internal.NewMapBuilder(
-		cfg.SrcDir, destDir, internal.WithExcludes(mapConfig.Excludes), internal.WithRemaps(remaps),
+	excludes := append(ignores, mapConfig.Excludes...)
+	list, err := internal.NewMapBuilder(
+		cfg.SrcDir, destDir, internal.WithExcludes(excludes), internal.WithRemaps(remaps),
 	).Build()
+	if err != nil {
+		return err
+	}
 
 	tableData := make([][]string, 0, len(list)+1) // add header capacity
 	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
 	for _, v := range list {
-		tableData = append(tableData, []string{v.Src, v.Dest})
+		tableData = append(tableData, []string{v.Src.Path, v.Dest.Path})
 	}
 
 	if err := pterm.DefaultTable.

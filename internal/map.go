@@ -8,48 +8,43 @@ import (
 )
 
 type Map struct {
-	Src  string
-	Dest string
+	Src  File
+	Dest File
 }
 
-var ErrAlreadyExists = errors.New("already exists")
-var ErrAlreadyLinked = errors.New("already linked")
-
-func (m *Map) CanLink() error {
-	f, err := os.Lstat(m.Dest)
-	if err != nil {
-		if os.IsNotExist(err) { // if Lstat() returns not exists error
-			return nil
-		}
-		return fmt.Errorf("%s: %w", m.Dest, err) // if Lstat() returns other error
-	}
-
-	if f.Mode()&os.ModeSymlink == 0 { // if not symlink
-		return fmt.Errorf("%s: %w", m.Dest, fs.ErrExist)
-	}
-
-	link, err := os.Readlink(m.Dest)
-	if err != nil { // if Readlink() returns error
-		return fmt.Errorf("%s: %w", m.Dest, err)
-	}
-	if link != m.Src { // if link is not same as source path
-		return fmt.Errorf("%s: %s", m.Dest, fs.ErrExist)
-	}
-	return ErrAlreadyLinked
+type File struct {
+	Path     string
+	NotExist bool
+	Lstat    fs.FileInfo
 }
 
-func (m *Map) CanCopy() error {
-	f, err := os.Lstat(m.Dest)
+func NewFile(path string) (*File, error) {
+	var notExist bool
+	f, err := os.Lstat(path)
 	if err != nil {
-		if os.IsNotExist(err) { // if Lstat() returns not exists error
-			return nil
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("%s: %w", path, err)
 		}
-		return fmt.Errorf("%s: %w", m.Dest, err) // if Lstat() returns other error
+		notExist = true
 	}
+	return &File{
+		Path:     path,
+		NotExist: notExist,
+		Lstat:    f,
+	}, nil
+}
 
-	if f.Mode()&os.ModeSymlink != 0 { // if symlink
-		return fmt.Errorf("%s: %w", m.Dest, ErrAlreadyLinked)
+func (f *File) IsSymLink() bool {
+	return f.Lstat.Mode()&os.ModeSymlink != 0
+}
+
+func (f *File) IsSameLink(path string) (bool, error) {
+	if !f.IsSymLink() {
+		return false, fmt.Errorf("%s: %w", f.Path, errors.New("not symlink"))
 	}
-
-	return nil // if exists, returns noerror
+	l, err := os.Readlink(f.Path)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", f.Path, err)
+	}
+	return l == path, nil
 }
