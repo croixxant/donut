@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/croixxant/donut/testutil"
@@ -14,42 +13,31 @@ func TestWhere(t *testing.T) {
 	srcDir := t.TempDir()
 
 	tests := []struct {
-		name          string
-		testdata      map[string]interface{}
-		beforeFunc    func(*testing.T, string, map[string]interface{})
-		want          string
-		wantAssertion assert.ComparisonAssertionFunc
-		errAssertion  assert.ErrorAssertionFunc
+		name      string
+		testdata  map[string]interface{}
+		want      string
+		assertion assert.ErrorAssertionFunc
 	}{
 		{
-			name: "OK",
-			testdata: map[string]interface{}{
-				"src_dir": srcDir,
-			},
-			beforeFunc:   testutil.CreateFile,
-			want:         srcDir,
-			errAssertion: assert.NoError,
+			name:      "OK",
+			testdata:  map[string]interface{}{"src_dir": srcDir},
+			want:      srcDir,
+			assertion: assert.NoError,
 		},
 		{
-			name: "SrcDirNotFound",
-			testdata: map[string]interface{}{
-				"src_dir": "",
-			},
-			beforeFunc:   testutil.CreateFile,
-			want:         "",
-			errAssertion: assert.Error,
+			name:      "IsNotDir",
+			testdata:  map[string]interface{}{},
+			want:      "",
+			assertion: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			home := t.TempDir()
-			tt.beforeFunc(t, filepath.Join(home, appName+".json"), tt.testdata)
-
-			_ = internal.InitConfig(internal.WithFile(appName, home))
+			_ = internal.InitConfig(internal.WithData(tt.testdata))
 			var err error
-			s := testutil.CaptureOutput(t, func() { err = Where(nil, nil) })
+			s := testutil.CaptureOutput(t, func() { err = Where() })
 			assert.Equal(t, tt.want, s)
-			tt.errAssertion(t, err)
+			tt.assertion(t, err)
 		})
 	}
 }

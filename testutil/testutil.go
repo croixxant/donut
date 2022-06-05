@@ -2,17 +2,19 @@ package testutil
 
 import (
 	"bytes"
-	"encoding/json"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/pelletier/go-toml/v2"
+	"github.com/pterm/pterm"
 )
 
 func CreateFile(t *testing.T, path string, data map[string]interface{}) {
 	t.Helper()
 
 	buf := new(bytes.Buffer)
-	if err := json.NewEncoder(buf).Encode(data); err != nil {
+	if err := toml.NewEncoder(buf).Encode(data); err != nil {
 		t.Fatalf("failed to encode testdata")
 	}
 	if err := os.WriteFile(path, buf.Bytes(), os.ModePerm); err != nil {
@@ -24,9 +26,13 @@ func CaptureOutput(t *testing.T, fn func()) string {
 	t.Helper()
 
 	stdout := os.Stdout
-	defer func() { os.Stdout = stdout }()
+	defer func() {
+		os.Stdout = stdout
+		pterm.SetDefaultOutput(stdout)
+	}()
 	r, w, _ := os.Pipe()
 	os.Stdout = w
+	pterm.SetDefaultOutput(w)
 	fn()
 	w.Close()
 	buf := new(bytes.Buffer)

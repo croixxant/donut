@@ -19,14 +19,20 @@ func newWhereCmd() *cobra.Command {
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
 		Args:    cobra.NoArgs,
-		RunE:    Where,
 		PreRunE: InitConfig,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return Where()
+		},
 	}
 	return cmd
 }
 
-func Where(cmd *cobra.Command, _ []string) error {
+func Where() error {
 	cfg := internal.GetConfig()
+	if err := internal.IsDir(cfg.SrcDir); err != nil {
+		return err
+	}
+
 	fmt.Println(cfg.SrcDir)
 	return nil
 }

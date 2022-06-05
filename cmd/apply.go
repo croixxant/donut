@@ -24,8 +24,11 @@ func newApplyCmd() *cobra.Command {
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
 		Args:    cobra.NoArgs,
-		RunE:    Apply,
 		PreRunE: InitConfigAndMapConfig,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			force, _ := cmd.Flags().GetBool("force")
+			return Apply(force)
+		},
 	}
 
 	cmd.Flags().BoolP("force", "f", false, "Help message for toggle")
@@ -33,7 +36,7 @@ func newApplyCmd() *cobra.Command {
 	return cmd
 }
 
-func Apply(cmd *cobra.Command, args []string) error {
+func Apply(force bool) error {
 	cfg := internal.GetConfig()
 	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
@@ -47,13 +50,12 @@ func Apply(cmd *cobra.Command, args []string) error {
 	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
 	excludes := append(ignores, mapConfig.Excludes...)
 	list, err := internal.NewMapBuilder(
-		cfg.SrcDir, destDir, internal.WithExcludes(excludes), internal.WithRemaps(remaps),
+		cfg.SrcDir, destDir, internal.WithExcludes(excludes...), internal.WithRemaps(remaps),
 	).Build()
 	if err != nil {
 		return err
 	}
 
-	force, _ := cmd.Flags().GetBool("force")
 	if mapConfig.Method == internal.MethodLink {
 		return Link(list, force)
 	}
@@ -79,7 +81,7 @@ func Link(list []internal.Map, force bool) error {
 			maybeAdd(v, fs.ErrExist)
 			continue
 		}
-		if same, err := v.Dest.IsSameLink(v.Src.Path); err != nil {
+		if same, err := v.Dest.IsSame(v.Src.Path); err != nil {
 			return fmt.Errorf("%s: %w", v.Dest.Path, err)
 		} else if !same {
 			maybeAdd(v, fs.ErrExist)

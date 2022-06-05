@@ -43,5 +43,6 @@ func InitConfig(opts ...Option) error {
 	}
 
 	config.viper = v
+	config.Data = &ConfigData{}
 	return v.Unmarshal(&config.Data, viper.DecodeHook(defaultDecodeHookFunc))
 }

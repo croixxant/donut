@@ -18,13 +18,15 @@ func newListCmd() *cobra.Command {
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
 		Args:    cobra.NoArgs,
-		RunE:    List,
 		PreRunE: InitConfigAndMapConfig,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return List()
+		},
 	}
 	return cmd
 }
 
-func List(cmd *cobra.Command, args []string) error {
+func List() error {
 	cfg := internal.GetConfig()
 	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
@@ -38,16 +40,32 @@ func List(cmd *cobra.Command, args []string) error {
 	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
 	excludes := append(ignores, mapConfig.Excludes...)
 	list, err := internal.NewMapBuilder(
-		cfg.SrcDir, destDir, internal.WithExcludes(excludes), internal.WithRemaps(remaps),
+		cfg.SrcDir, destDir, internal.WithExcludes(excludes...), internal.WithRemaps(remaps),
 	).Build()
 	if err != nil {
 		return err
 	}
 
 	tableData := make([][]string, 0, len(list)+1) // add header capacity
-	tableData = append(tableData, []string{"SOURCE", "DESTINATION"})
+	header := []string{"SOURCE", "DESTINATION"}
+	if mapConfig.Method == internal.MethodLink {
+		header = append([]string{"✔ "}, header...)
+	}
+	tableData = append(tableData, header)
 	for _, v := range list {
-		tableData = append(tableData, []string{v.Src.Path, v.Dest.Path})
+		row := []string{v.Src.Path, v.Dest.Path}
+		if mapConfig.Method == internal.MethodLink {
+			var l string
+			if !v.Dest.NotExist {
+				if linked, err := v.Dest.IsSame(v.Src.Path); err != nil {
+					return err
+				} else if linked {
+					l = "✔ "
+				}
+			}
+			row = append([]string{l}, row...)
+		}
+		tableData = append(tableData, row)
 	}
 
 	if err := pterm.DefaultTable.

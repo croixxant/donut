@@ -16,3 +16,12 @@ func WithFile(name string, paths ...string) Option {
 		return nil
 	}
 }
+
+func WithData(data map[string]interface{}) Option {
+	return func(v *viper.Viper) error {
+		for k, d := range data {
+			v.Set(k, d)
+		}
+		return nil
+	}
+}

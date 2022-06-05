@@ -6,11 +6,11 @@ import (
 	"github.com/croixxant/donut/internal"
 )
 
-func InitConfig(cmd *cobra.Command, args []string) error {
+func InitConfig(_ *cobra.Command, _ []string) error {
 	return internal.InitConfig(internal.WithFile(appName, cfgDirPaths...))
 }
 
-func InitConfigAndMapConfig(cmd *cobra.Command, args []string) error {
+func InitConfigAndMapConfig(_ *cobra.Command, _ []string) error {
 	if err := internal.InitConfig(internal.WithFile(appName, cfgDirPaths...)); err != nil {
 		return err
 	}

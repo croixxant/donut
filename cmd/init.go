@@ -21,22 +21,22 @@ func newInitCmd() *cobra.Command {
 	This application is a tool to generate the needed files
 	to quickly create a Cobra application.`,
 		Args: cobra.ExactArgs(1),
-		RunE: Init,
+		RunE: func(_ *cobra.Command, args []string) error {
+			return Init(args[0])
+		},
 	}
 
 	return cmd
 }
 
-var defaultConfigPath = "$HOME/.config/donut/donut.toml"
-
-func Init(cmd *cobra.Command, args []string) error {
+func Init(srcDir string) error {
 	if err := internal.InitConfig(internal.WithFile(appName, cfgDirPaths...)); err != nil {
 		if err := internal.InitConfig(); err != nil {
 			return err
 		}
 	}
 
-	if _, err := internal.SetConfig("src_dir", args[0]); err != nil {
+	if _, err := internal.SetConfig("src_dir", srcDir); err != nil {
 		return err
 	}
 

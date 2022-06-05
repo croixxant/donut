@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,13 +11,20 @@ type Map struct {
 	Dest File
 }
 
+func newMap(src, dest *File) Map {
+	return Map{
+		Src:  *src,
+		Dest: *dest,
+	}
+}
+
 type File struct {
 	Path     string
 	NotExist bool
 	Lstat    fs.FileInfo
 }
 
-func NewFile(path string) (*File, error) {
+func newFile(path string) (*File, error) {
 	var notExist bool
 	f, err := os.Lstat(path)
 	if err != nil {
@@ -38,9 +44,9 @@ func (f *File) IsSymLink() bool {
 	return f.Lstat.Mode()&os.ModeSymlink != 0
 }
 
-func (f *File) IsSameLink(path string) (bool, error) {
+func (f *File) IsSame(path string) (bool, error) {
 	if !f.IsSymLink() {
-		return false, fmt.Errorf("%s: %w", f.Path, errors.New("not symlink"))
+		return f.Path == path, nil
 	}
 	l, err := os.Readlink(f.Path)
 	if err != nil {

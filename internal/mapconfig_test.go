@@ -11,7 +11,8 @@ import (
 func TestGetMapConfig(t *testing.T) {
 	dir, destDir := t.TempDir(), t.TempDir()
 	data := map[string]interface{}{"dest_dir": destDir}
-	testutil.CreateFile(t, filepath.Join(dir, mapConfigName+".json"), data)
+	mapConfigName := "mapconfig"
+	testutil.CreateFile(t, filepath.Join(dir, mapConfigName+".toml"), data)
 
 	tests := []struct {
 		name string
@@ -66,8 +67,9 @@ func TestInitMapConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
+			mapConfigName := "mapconfig"
 			if tt.beforeFunc != nil {
-				tt.beforeFunc(t, filepath.Join(dir, mapConfigName+".json"), tt.testdata)
+				tt.beforeFunc(t, filepath.Join(dir, mapConfigName+".toml"), tt.testdata)
 			}
 			err := InitMapConfig(WithFile(mapConfigName, dir))
 			tt.assertion(t, err)

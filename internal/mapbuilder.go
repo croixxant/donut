@@ -31,7 +31,7 @@ func NewMapBuilder(srcDir, destDir string, funcs ...MapBuilderOption) *MapBuilde
 	return b
 }
 
-func WithExcludes(s []string) MapBuilderOption {
+func WithExcludes(s ...string) MapBuilderOption {
 	return func(b *MapBuilder) {
 		b.excludes = append(b.excludes, s...)
 	}
@@ -67,18 +67,15 @@ func (b *MapBuilder) Build() ([]Map, error) {
 			dPath = re
 		}
 
-		sFile, err := NewFile(path)
+		sFile, err := newFile(path)
 		if err != nil {
 			return err
 		}
-		dFile, err := NewFile(dPath)
+		dFile, err := newFile(dPath)
 		if err != nil {
 			return err
 		}
-		maps = append(maps, Map{
-			Src:  *sFile,
-			Dest: *dFile,
-		})
+		maps = append(maps, newMap(sFile, dFile))
 		return nil
 	})
 
