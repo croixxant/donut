@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
 
@@ -21,24 +20,22 @@ func GetConfig() *ConfigData {
 	return config.Data
 }
 
-type Option func(v *viper.Viper) error
+func WriteConfig(filename string) error {
+	return config.viper.WriteConfigAs(filename)
+}
 
-func WithFile(paths ...string) Option {
-	return func(v *viper.Viper) error {
-		for _, path := range paths {
-			v.AddConfigPath(path)
-		}
-		if err := v.ReadInConfig(); err != nil {
-			return err
-		}
-		return nil
+func SetConfig(key string, value interface{}) (*ConfigData, error) {
+	config.viper.Set(key, value)
+	if err := config.viper.Unmarshal(&config.Data, viper.DecodeHook(defaultDecodeHookFunc)); err != nil {
+		return nil, err
 	}
+
+	return config.Data, nil
 }
 
 func InitConfig(opts ...Option) error {
 	v := viper.New()
 
-	v.SetConfigName(AppName)
 	for _, opt := range opts {
 		if err := opt(v); err != nil {
 			return err
@@ -46,9 +43,6 @@ func InitConfig(opts ...Option) error {
 	}
 
 	config.viper = v
-	return v.Unmarshal(&config.Data, viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
-		ExpandEnvFunc(),
-		mapstructure.StringToTimeDurationHookFunc(),
-		mapstructure.StringToSliceHookFunc(","),
-	)))
+	config.Data = &ConfigData{}
+	return v.Unmarshal(&config.Data, viper.DecodeHook(defaultDecodeHookFunc))
 }

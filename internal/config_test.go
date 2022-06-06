@@ -1,7 +1,10 @@
 package internal
 
 import (
+	"io"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/croixxant/donut/testutil"
@@ -11,7 +14,8 @@ import (
 func TestGetConfig(t *testing.T) {
 	home, srcDir := t.TempDir(), t.TempDir()
 	data := map[string]interface{}{"src_dir": srcDir}
-	testutil.CreateFile(t, filepath.Join(home, AppName+".json"), data)
+	cfgName := "config"
+	testutil.CreateFile(t, filepath.Join(home, cfgName+".toml"), data)
 
 	tests := []struct {
 		name    string
@@ -26,8 +30,71 @@ func TestGetConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = InitConfig(WithFile(tt.homeDir))
+			_ = InitConfig(WithFile(cfgName, tt.homeDir))
 			assert.Equal(t, tt.want, GetConfig())
+		})
+	}
+}
+
+func TestWriteConfig(t *testing.T) {
+	dir := t.TempDir()
+
+	type args struct {
+		filename string
+		srcDir   string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      string
+		assertion assert.ErrorAssertionFunc
+	}{
+		{
+			"OK",
+			args{filepath.Join(dir, "config.toml"), "/home/gopher"},
+			"/home/gopher",
+			assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = InitConfig()
+			_, _ = SetConfig("src_dir", tt.args.srcDir)
+			tt.assertion(t, WriteConfig(tt.args.filename))
+			f, err := os.Open(tt.args.filename)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := io.ReadAll(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.True(t, strings.Contains(string(b), tt.want))
+		})
+	}
+}
+
+func TestSetConfig(t *testing.T) {
+	srcDir := t.TempDir()
+
+	type args struct {
+		key   string
+		value interface{}
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      *ConfigData
+		assertion assert.ErrorAssertionFunc
+	}{
+		{"OK", args{"src_dir", srcDir}, &ConfigData{SrcDir: srcDir}, assert.NoError},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = InitConfig()
+			got, err := SetConfig(tt.args.key, tt.args.value)
+			tt.assertion(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -57,10 +124,11 @@ func TestInitConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
+			cfgName := "config"
 			if tt.beforeFunc != nil {
-				tt.beforeFunc(t, filepath.Join(home, AppName+".json"), tt.testdata)
+				tt.beforeFunc(t, filepath.Join(home, cfgName+".toml"), tt.testdata)
 			}
-			err := InitConfig(WithFile(home))
+			err := InitConfig(WithFile(cfgName, home))
 			tt.assertion(t, err)
 		})
 	}

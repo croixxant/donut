@@ -3,7 +3,6 @@ package internal
 import (
 	"os"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
 
@@ -15,8 +14,16 @@ type MapConfig struct {
 type MapConfigData struct {
 	Excludes []string
 	DestDir  string `mapstructure:"dest_dir"`
-	Maps     []Map
+	Method   Method
+	Maps     map[string]string
 }
+
+type Method string
+
+const (
+	MethodLink = "link"
+	MethodCopy = "copy"
+)
 
 var mapConfig *MapConfig = &MapConfig{}
 
@@ -25,15 +32,15 @@ func GetMapConfig() *MapConfigData {
 }
 
 func InitMapConfig(opts ...Option) error {
-	v := viper.New()
+	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
 
-	v.SetConfigName(MapConfigName)
 	{ // set default values
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
 		v.SetDefault("dest_dir", home)
+		v.SetDefault("method", MethodCopy)
 	}
 
 	for _, opt := range opts {
@@ -41,20 +48,13 @@ func InitMapConfig(opts ...Option) error {
 	}
 
 	mapConfig.viper = v
-	return v.Unmarshal(&mapConfig.Data, viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
-		ExpandEnvFunc(),
-		mapstructure.StringToTimeDurationHookFunc(),
-		mapstructure.StringToSliceHookFunc(","),
-	)))
+	return v.Unmarshal(&mapConfig.Data, viper.DecodeHook(defaultDecodeHookFunc))
 }
 
-func (d *MapConfigData) AbsMaps(srcDir string, destDir string) []Map {
-	s := make([]Map, 0, len(d.Maps))
-	for _, v := range d.Maps {
-		s = append(s, Map{
-			Src:  Abs(v.Src, srcDir),
-			Dest: Abs(v.Dest, destDir),
-		})
+func (d *MapConfigData) AbsMaps(srcDir string, destDir string) map[string]string {
+	m := make(map[string]string, len(d.Maps))
+	for k, v := range d.Maps {
+		m[Abs(k, srcDir)] = Abs(v, destDir)
 	}
-	return s
+	return m
 }

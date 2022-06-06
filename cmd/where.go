@@ -10,26 +10,18 @@ import (
 
 func newWhereCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "where",
-		Short: "A brief description of your command",
-		Long: `A longer description that spans multiple lines and likely contains examples
-	and usage of using your command. For example:
-	
-	Cobra is a CLI library for Go that empowers applications.
-	This application is a tool to generate the needed files
-	to quickly create a Cobra application.`,
+		Use:     "where",
+		Short:   "Show dotfiles source directory",
 		Args:    cobra.NoArgs,
-		RunE:    Where,
-		PreRunE: PreWhere,
+		PreRunE: InitConfig,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return Where()
+		},
 	}
 	return cmd
 }
 
-func PreWhere(cmd *cobra.Command, args []string) error {
-	return internal.InitConfig(internal.WithFile("$HOME", "$XDG_CONFIG_HOME"))
-}
-
-func Where(cmd *cobra.Command, _ []string) error {
+func Where() error {
 	cfg := internal.GetConfig()
 	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err

@@ -1,38 +1,56 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 )
 
 type Map struct {
-	Src  string
-	Dest string
+	Src  File
+	Dest File
 }
 
-var ErrAlreadyLinked = errors.New("already linked")
+func newMap(src, dest *File) Map {
+	return Map{
+		Src:  *src,
+		Dest: *dest,
+	}
+}
 
-func (m *Map) CanLink() error {
-	f, err := os.Lstat(m.Dest)
+type File struct {
+	Path     string
+	NotExist bool
+	Lstat    fs.FileInfo
+}
+
+func newFile(path string) (*File, error) {
+	var notExist bool
+	f, err := os.Lstat(path)
 	if err != nil {
-		if os.IsNotExist(err) { // if Lstat() returns not exists error
-			return nil
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("%s: %w", path, err)
 		}
-		return fmt.Errorf("%s: %w", m.Dest, err) // if Lstat() returns other error
+		notExist = true
 	}
+	return &File{
+		Path:     path,
+		NotExist: notExist,
+		Lstat:    f,
+	}, nil
+}
 
-	if f.Mode()&os.ModeSymlink == 0 { // if not symlink
-		return fmt.Errorf("%s: %w", m.Dest, fs.ErrExist)
-	}
+func (f *File) IsSymLink() bool {
+	return f.Lstat.Mode()&os.ModeSymlink != 0
+}
 
-	link, err := os.Readlink(m.Dest)
-	if err != nil { // if Readlink() returns error
-		return fmt.Errorf("%s: %w", m.Dest, err)
+func (f *File) IsSame(path string) (bool, error) {
+	if !f.IsSymLink() {
+		return f.Path == path, nil
 	}
-	if link != m.Src { // if link is not same as source path
-		return fmt.Errorf("%s: %s", m.Dest, fs.ErrExist)
+	l, err := os.Readlink(f.Path)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", f.Path, err)
 	}
-	return ErrAlreadyLinked
+	return l == path, nil
 }
