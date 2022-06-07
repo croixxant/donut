@@ -18,6 +18,8 @@ func newRootCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 
+	cmd.PersistentFlags().StringP("config", "c", "", "location of config file")
+
 	cmd.AddCommand(newInitCmd(), newWhereCmd(), newListCmd(), newApplyCmd())
 
 	return cmd

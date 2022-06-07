@@ -15,16 +15,20 @@ func newInitCmd() *cobra.Command {
 		Use:   "init [src_dir]",
 		Short: "Generate the configuration file",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			return Init(args[0])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfgPath, err := cmd.Flags().GetString("config")
+			if err != nil {
+				return err
+			}
+			return Init(args[0], cfgPath)
 		},
 	}
 
 	return cmd
 }
 
-func Init(srcDir string) error {
-	if err := internal.InitConfig(internal.WithFile(appName, cfgDirPaths...)); err != nil {
+func Init(srcDir, cfgPath string) error {
+	if err := internal.InitConfig(internal.WithNameAndPath(appName, cfgDirPaths...)); err != nil {
 		if err := internal.InitConfig(); err != nil {
 			return err
 		}
@@ -34,7 +38,9 @@ func Init(srcDir string) error {
 		return err
 	}
 
-	cfgPath := os.ExpandEnv(defaultConfigPath)
+	if cfgPath == "" {
+		cfgPath = os.ExpandEnv(defaultConfigPath)
+	}
 	dir := filepath.Dir(cfgPath)
 	if err := internal.Mkdir(dir); err != nil {
 		return err

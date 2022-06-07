@@ -14,7 +14,8 @@ func TestInit(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 
 	type args struct {
-		srcDir string
+		srcDir  string
+		cfgPath string
 	}
 	tests := []struct {
 		name      string
@@ -22,12 +23,12 @@ func TestInit(t *testing.T) {
 		want      string
 		assertion assert.ErrorAssertionFunc
 	}{
-		{"OK", args{"/home/gopher"}, "Configuration file created in", assert.NoError},
+		{"OK", args{"/home/gopher", ""}, "Configuration file created in", assert.NoError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			s := testutil.CaptureOutput(t, func() { err = Init(tt.args.srcDir) })
+			s := testutil.CaptureOutput(t, func() { err = Init(tt.args.srcDir, tt.args.cfgPath) })
 			assert.True(t, strings.Contains(s, tt.want))
 			tt.assertion(t, err)
 		})

@@ -4,7 +4,17 @@ import "github.com/spf13/viper"
 
 type Option func(v *viper.Viper) error
 
-func WithFile(name string, paths ...string) Option {
+func WithFile(file string) Option {
+	return func(v *viper.Viper) error {
+		v.SetConfigFile(file)
+		if err := v.ReadInConfig(); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func WithNameAndPath(name string, paths ...string) Option {
 	return func(v *viper.Viper) error {
 		v.SetConfigName(name)
 		for _, path := range paths {

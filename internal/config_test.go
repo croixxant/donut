@@ -30,7 +30,7 @@ func TestGetConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = InitConfig(WithFile(cfgName, tt.homeDir))
+			_ = InitConfig(WithNameAndPath(cfgName, tt.homeDir))
 			assert.Equal(t, tt.want, GetConfig())
 		})
 	}
@@ -128,7 +128,7 @@ func TestInitConfig(t *testing.T) {
 			if tt.beforeFunc != nil {
 				tt.beforeFunc(t, filepath.Join(home, cfgName+".toml"), tt.testdata)
 			}
-			err := InitConfig(WithFile(cfgName, home))
+			err := InitConfig(WithNameAndPath(cfgName, home))
 			tt.assertion(t, err)
 		})
 	}

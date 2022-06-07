@@ -6,6 +6,14 @@ import (
 	"github.com/croixxant/donut/internal"
 )
 
-func InitConfig(_ *cobra.Command, _ []string) error {
-	return internal.InitConfig(internal.WithFile(appName, cfgDirPaths...))
+func InitConfig(cmd *cobra.Command, _ []string) error {
+	cfgPath, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+	if cfgPath == "" {
+		return internal.InitConfig(internal.WithNameAndPath(appName, cfgDirPaths...))
+	} else {
+		return internal.InitConfig(internal.WithFile(cfgPath))
+	}
 }
