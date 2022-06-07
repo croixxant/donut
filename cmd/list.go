@@ -12,7 +12,7 @@ func newListCmd() *cobra.Command {
 		Use:     "list",
 		Short:   "List files to be applied",
 		Args:    cobra.NoArgs,
-		PreRunE: InitConfigAndMapConfig,
+		PreRunE: InitConfig,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return List()
 		},
@@ -25,14 +25,13 @@ func List() error {
 	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
-	mapConfig := internal.GetMapConfig() // Get from config file
-	destDir, err := internal.DirOrHome(mapConfig.DestDir)
+	destDir, err := internal.DirOrHome(cfg.DestDir)
 	if err != nil {
 		return err
 	}
 
-	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
-	excludes := append(ignores, mapConfig.Excludes...)
+	remaps := cfg.AbsMaps(cfg.SrcDir, destDir)
+	excludes := append(ignores, cfg.Excludes...)
 	list, err := internal.NewMapBuilder(
 		cfg.SrcDir, destDir, internal.WithExcludes(excludes...), internal.WithRemaps(remaps),
 	).Build()
@@ -42,13 +41,13 @@ func List() error {
 
 	tableData := make([][]string, 0, len(list)+1) // add header capacity
 	header := []string{"SOURCE", "DESTINATION"}
-	if mapConfig.Method == internal.MethodLink {
+	if cfg.Method == internal.MethodLink {
 		header = append([]string{"✔ "}, header...)
 	}
 	tableData = append(tableData, header)
 	for _, v := range list {
 		row := []string{v.Src.Path, v.Dest.Path}
-		if mapConfig.Method == internal.MethodLink {
+		if cfg.Method == internal.MethodLink {
 			var l string
 			if !v.Dest.NotExist {
 				if linked, err := v.Dest.IsSame(v.Src.Path); err != nil {

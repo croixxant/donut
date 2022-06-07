@@ -18,7 +18,7 @@ func newApplyCmd() *cobra.Command {
 		Use:     "apply",
 		Short:   "Apply files from source to destination",
 		Args:    cobra.NoArgs,
-		PreRunE: InitConfigAndMapConfig,
+		PreRunE: InitConfig,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			force, _ := cmd.Flags().GetBool("force")
 			return Apply(force)
@@ -35,14 +35,13 @@ func Apply(force bool) error {
 	if err := internal.IsDir(cfg.SrcDir); err != nil {
 		return err
 	}
-	mapConfig := internal.GetMapConfig() // Get from config file
-	destDir, err := internal.DirOrHome(mapConfig.DestDir)
+	destDir, err := internal.DirOrHome(cfg.DestDir)
 	if err != nil {
 		return err
 	}
 
-	remaps := mapConfig.AbsMaps(cfg.SrcDir, destDir)
-	excludes := append(ignores, mapConfig.Excludes...)
+	remaps := cfg.AbsMaps(cfg.SrcDir, destDir)
+	excludes := append(ignores, cfg.Excludes...)
 	list, err := internal.NewMapBuilder(
 		cfg.SrcDir, destDir, internal.WithExcludes(excludes...), internal.WithRemaps(remaps),
 	).Build()
@@ -50,7 +49,7 @@ func Apply(force bool) error {
 		return err
 	}
 
-	if mapConfig.Method == internal.MethodLink {
+	if cfg.Method == internal.MethodLink {
 		return Link(list, force)
 	}
 	return Copy(list, force)

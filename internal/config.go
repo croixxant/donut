@@ -10,8 +10,19 @@ type (
 		viper *viper.Viper
 	}
 	ConfigData struct {
-		SrcDir string `mapstructure:"src_dir"`
+		SrcDir   string `mapstructure:"src_dir"`
+		DestDir  string `mapstructure:"dest_dir"`
+		Excludes []string
+		Method   Method
+		Maps     map[string]string
 	}
+)
+
+type Method string
+
+const (
+	MethodLink = "link"
+	MethodCopy = "copy"
 )
 
 var config *Config = &Config{}
@@ -34,7 +45,7 @@ func SetConfig(key string, value interface{}) (*ConfigData, error) {
 }
 
 func InitConfig(opts ...Option) error {
-	v := viper.New()
+	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
 
 	for _, opt := range opts {
 		if err := opt(v); err != nil {
@@ -45,4 +56,12 @@ func InitConfig(opts ...Option) error {
 	config.viper = v
 	config.Data = &ConfigData{}
 	return v.Unmarshal(&config.Data, viper.DecodeHook(defaultDecodeHookFunc))
+}
+
+func (d *ConfigData) AbsMaps(srcDir string, destDir string) map[string]string {
+	m := make(map[string]string, len(d.Maps))
+	for k, v := range d.Maps {
+		m[Abs(k, srcDir)] = Abs(v, destDir)
+	}
+	return m
 }

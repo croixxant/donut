@@ -37,19 +37,16 @@ func TestList(t *testing.T) {
 	tests := []struct {
 		name      string
 		cfgData   map[string]interface{}
-		mapData   map[string]interface{}
 		want      [][]string
 		assertion assert.ErrorAssertionFunc
 	}{
 		{
 			"OK",
 			map[string]interface{}{
-				"src_dir": srcDir,
-			},
-			map[string]interface{}{
+				"src_dir":  srcDir,
 				"dest_dir": home,
 				"method":   "link",
-				"maps": map[string]interface{}{
+				"maps": map[string]string{
 					"foo.toml": "changed.toml",
 				},
 			},
@@ -65,7 +62,6 @@ func TestList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_ = internal.InitConfig(internal.WithData(tt.cfgData))
-			_ = internal.InitMapConfig(internal.WithData(tt.mapData))
 			var err error
 			s := testutil.CaptureOutput(t, func() { err = List() })
 			b := bufio.NewReader(bytes.NewBufferString(s))

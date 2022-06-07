@@ -133,3 +133,42 @@ func TestInitConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigData_AbsMaps(t *testing.T) {
+	type fields struct {
+		Maps map[string]string
+	}
+	type args struct {
+		srcDir  string
+		destDir string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   map[string]string
+	}{
+		{
+			name: "OK",
+			fields: fields{
+				Maps: map[string]string{
+					".config/starship.toml": ".config/starship.toml",
+					".zshenv":               "/home/gopher/.zshenv",
+				},
+			},
+			args: args{srcDir: "/home/gopher/.local/share", destDir: "/home/gopher"},
+			want: map[string]string{
+				"/home/gopher/.local/share/.config/starship.toml": "/home/gopher/.config/starship.toml",
+				"/home/gopher/.local/share/.zshenv":               "/home/gopher/.zshenv",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &ConfigData{
+				Maps: tt.fields.Maps,
+			}
+			assert.Equal(t, tt.want, d.AbsMaps(tt.args.srcDir, tt.args.destDir))
+		})
+	}
+}

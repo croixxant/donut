@@ -9,17 +9,3 @@ import (
 func InitConfig(_ *cobra.Command, _ []string) error {
 	return internal.InitConfig(internal.WithFile(appName, cfgDirPaths...))
 }
-
-func InitConfigAndMapConfig(_ *cobra.Command, _ []string) error {
-	if err := internal.InitConfig(internal.WithFile(appName, cfgDirPaths...)); err != nil {
-		return err
-	}
-	cfg := internal.GetConfig()
-	if err := internal.IsDir(cfg.SrcDir); err != nil {
-		return err
-	}
-	if err := internal.InitMapConfig(internal.WithFile(mapConfigName, cfg.SrcDir)); err != nil {
-		return err
-	}
-	return nil
-}

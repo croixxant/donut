@@ -19,7 +19,6 @@ func TestApply(t *testing.T) {
 		name      string
 		args      args
 		cfgData   map[string]interface{}
-		mapData   map[string]interface{}
 		want      string
 		assertion assert.ErrorAssertionFunc
 	}{
@@ -27,9 +26,7 @@ func TestApply(t *testing.T) {
 			"OK",
 			args{false},
 			map[string]interface{}{
-				"src_dir": srcDir,
-			},
-			map[string]interface{}{
+				"src_dir":  srcDir,
 				"dest_dir": home,
 			},
 			"",
@@ -39,7 +36,6 @@ func TestApply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_ = internal.InitConfig(internal.WithData(tt.cfgData))
-			_ = internal.InitMapConfig(internal.WithData(tt.mapData))
 			var err error
 			_ = testutil.CaptureOutput(t, func() { err = Apply(tt.args.force) })
 			tt.assertion(t, err)
