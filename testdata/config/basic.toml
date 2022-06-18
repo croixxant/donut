@@ -1,0 +1,2 @@
+src_dir = "$HOME/.local/share/donut"
+dest_dir = "$HOME"

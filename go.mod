@@ -3,6 +3,7 @@ module github.com/croixxant/donut
 go 1.18
 
 require (
+	github.com/google/go-cmp v0.5.8
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/pelletier/go-toml/v2 v2.0.0-beta.8
 	github.com/pterm/pterm v0.12.41
