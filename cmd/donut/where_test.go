@@ -22,20 +22,20 @@ func Test_WhereCmd(t *testing.T) {
 		{
 			name:      "OK/WithNoConfig",
 			opts:      nil,
-			want:      filepath.Join(".local", "share", donut.Name),
+			want:      filepath.Join(".local", "share", donut.Name) + "\n",
 			assertion: assert.NoError,
 		},
 		{
 			name:          "OK/WithDefaultConfig",
 			opts:          nil,
 			defaultConfig: "../../testdata/config/basic.toml",
-			want:          filepath.Join(".local", "share", donut.Name),
+			want:          filepath.Join(".local", "share", donut.Name) + "\n",
 			assertion:     assert.NoError,
 		},
 		{
 			name:      "OK/WithConfig",
 			opts:      []string{"--config", "../../testdata/config/basic.toml"},
-			want:      filepath.Join(".local", "share", donut.Name),
+			want:      filepath.Join(".local", "share", donut.Name) + "\n",
 			assertion: assert.NoError,
 		},
 		{

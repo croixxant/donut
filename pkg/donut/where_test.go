@@ -26,7 +26,7 @@ func TestDonut_Where(t *testing.T) {
 					SrcDir: dir,
 				},
 			},
-			want:      dir,
+			want:      dir + "\n",
 			assertion: assert.NoError,
 		},
 		{
