@@ -13,3 +13,9 @@ test:
 .PHONY: cover
 cover:
 	go tool cover -html=$(COVERAGE_OUT) -o $(COVERAGE_HTML)
+
+.PHONY: clean
+clean:
+	rm -f bin/$(NAME)
+	rm -f $(COVERAGE_OUT)
+	rm -f $(COVERAGE_HTML)
