@@ -19,3 +19,5 @@ cover.html
 
 .vscode/*
 !.vscode/settings.json
+
+dist/

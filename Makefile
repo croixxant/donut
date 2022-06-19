@@ -1,11 +1,10 @@
 NAME=donut
-VERSION=0.0.1
 COVERAGE_OUT=cover.out
 COVERAGE_HTML=cover.html
 
 .PHONY: build
 build:
-	go build -ldflags "-X main.version=${VERSION}" -o bin/$(NAME)
+	go build -o bin/$(NAME)
 
 .PHONY: test
 test:
