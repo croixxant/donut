@@ -49,6 +49,7 @@ func newRelationsBuilder(srcDir, destDir string, funcs ...relationsBuilderOption
 	for _, fn := range funcs {
 		fn(b)
 	}
+
 	return b
 }
 
@@ -69,14 +70,20 @@ func withMapping(m map[string]string) relationsBuilderOption {
 func (b *relationsBuilder) build() ([]relation, error) {
 	var rels []relation
 	err := filepath.WalkDir(b.srcDir, func(path string, d fs.DirEntry, _ error) error {
+		prefixTrimmed := strings.TrimPrefix(strings.TrimPrefix(path, b.srcDir), string(filepath.Separator))
+
+		eq := func(s string) bool {
+			ok, _ := filepath.Match(s, prefixTrimmed)
+			return ok
+		}
 		if d.IsDir() { // skip directoires
+			if slices.IndexFunc(b.excludes, eq) != -1 {
+				return fs.SkipDir
+			}
 			return nil
 		}
 
 		// ignore b.excludes
-		eq := func(s string) bool {
-			return strings.Contains(strings.TrimPrefix(path, b.srcDir), s)
-		}
 		if slices.IndexFunc(b.excludes, eq) != -1 {
 			return nil
 		}

@@ -22,6 +22,8 @@ func TestDonut_Apply(t *testing.T) {
 		"../../testdata/data/.zprofile":    ".zprofile",
 		"../../testdata/data/.zshenv":      ".zshenv",
 		"../../testdata/data/.zlogin":      ".zlogin",
+		"../../testdata/data/.empty":       ".git/.empty",
+		"../../testdata/data/.gitconfig":   ".gitconfig",
 	}
 	destFiles := map[string]string{"../../testdata/data/.example": ".example"}
 	links := map[string]string{
@@ -150,7 +152,7 @@ func TestDonut_Apply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			home, _, data := testutil.CreateBaseDir(t)
-			testutil.CreateDirs(t, filepath.Join(data, ".config"))
+			testutil.CreateDirs(t, filepath.Join(data, ".config"), filepath.Join(data, ".git"))
 			for s, d := range tt.srcFiles {
 				defer testutil.CopyFile(t, s, filepath.Join(data, d))()
 			}
