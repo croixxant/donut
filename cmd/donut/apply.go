@@ -10,11 +10,15 @@ import (
 
 func newApplyCmd(outStream, errStream io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "apply",
-		Short:   "Apply files from source to destination",
-		Args:    cobra.NoArgs,
-		PreRunE: initConfig,
+		Use:   "apply",
+		Short: "Apply files from source to destination",
+		Args:  cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			cfgPath, _ := cmd.Flags().GetString("config")
+			return donut.InitConfig(cfgPath)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			force, _ := cmd.Flags().GetBool("force")
 			d, err := donut.New(
 				donut.WithConfig(donut.GetConfig()),
 				donut.WithOut(outStream),
@@ -23,7 +27,6 @@ func newApplyCmd(outStream, errStream io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			force, _ := cmd.Flags().GetBool("force")
 			return d.Apply(force)
 		},
 	}

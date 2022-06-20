@@ -10,10 +10,13 @@ import (
 
 func newWhereCmd(outStream, errStream io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "where",
-		Short:   "Show dotfiles source directory",
-		Args:    cobra.NoArgs,
-		PreRunE: initConfig,
+		Use:   "where",
+		Short: "Show dotfiles source directory",
+		Args:  cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			cfgPath, _ := cmd.Flags().GetString("config")
+			return donut.InitConfig(cfgPath)
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			d, err := donut.New(
 				donut.WithConfig(donut.GetConfig()),

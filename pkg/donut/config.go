@@ -1,10 +1,26 @@
 package donut
 
 import (
+	"errors"
+
 	"github.com/spf13/viper"
 )
 
 var viperInstance = viper.New()
+
+func InitConfig(cfgPath string) error {
+	if cfgPath != "" {
+		_, err := NewConfig(WithFile(cfgPath))
+		return err
+	}
+	if _, err := NewConfig(WithDefault(), WithNameAndPath(Name, DefaultConfigDirs()...)); err != nil {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
 
 func NewConfig(opts ...ConfigOption) (*viper.Viper, error) {
 	viperInstance = viper.NewWithOptions(viper.KeyDelimiter("::"))

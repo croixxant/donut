@@ -1,15 +1,11 @@
 package donut
 
 import (
-	"errors"
 	"io"
 	"os"
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/croixxant/donut/pkg/donut"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -43,22 +39,4 @@ func Execute() {
 		pterm.Error.Println(err)
 		os.Exit(1)
 	}
-}
-
-// initConfig is a function that initialize the configuration.
-// if -c option is set, use it as config file
-// if -c option is not set, use default config file, and default config file is not exist, use default params
-func initConfig(cmd *cobra.Command, _ []string) error {
-	cfgPath, _ := cmd.Flags().GetString("config")
-	if cfgPath != "" {
-		_, err := donut.NewConfig(donut.WithFile(cfgPath))
-		return err
-	}
-	if _, err := donut.NewConfig(donut.WithDefault(), donut.WithNameAndPath(donut.Name, donut.DefaultConfigDirs()...)); err != nil {
-		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
-			return nil
-		}
-		return err
-	}
-	return nil
 }

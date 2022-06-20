@@ -10,10 +10,13 @@ import (
 
 func newListCmd(outStream, errStream io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "List files to be applied",
-		Args:    cobra.NoArgs,
-		PreRunE: initConfig,
+		Use:   "list",
+		Short: "List files to be applied",
+		Args:  cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
+			cfgPath, _ := cmd.Flags().GetString("config")
+			return donut.InitConfig(cfgPath)
+		},
 		RunE: func(_ *cobra.Command, _ []string) error {
 			d, err := donut.New(
 				donut.WithConfig(donut.GetConfig()),
