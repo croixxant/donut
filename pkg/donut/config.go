@@ -57,7 +57,7 @@ const (
 	MethodCopy = "copy"
 )
 
-func (d *Config) absMaps() map[string]string {
+func (d *Config) absMappings() map[string]string {
 	m := make(map[string]string, len(d.Mappings))
 	for k, v := range d.Mappings {
 		m[absPath(k, d.SrcDir)] = absPath(v, d.DestDir)

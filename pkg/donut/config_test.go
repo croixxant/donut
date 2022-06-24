@@ -105,7 +105,7 @@ func TestNewConfig(t *testing.T) {
 	}
 }
 
-func TestConfig_absMaps(t *testing.T) {
+func TestConfig_absMappings(t *testing.T) {
 	dir := t.TempDir()
 
 	type fields struct {
@@ -141,7 +141,7 @@ func TestConfig_absMaps(t *testing.T) {
 				DestDir:  tt.fields.DestDir,
 				Mappings: tt.fields.Mappings,
 			}
-			assert.Equal(t, tt.want, d.absMaps())
+			assert.Equal(t, tt.want, d.absMappings())
 		})
 	}
 }

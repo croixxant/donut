@@ -15,7 +15,7 @@ func (d *Donut) List() error {
 		d.config.SrcDir,
 		d.config.DestDir,
 		withExcludes(d.config.Excludes...),
-		withMapping(d.config.absMaps()),
+		withMapping(d.config.absMappings()),
 	).build()
 	if err != nil {
 		return err
