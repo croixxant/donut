@@ -16,6 +16,4 @@ cover:
 
 .PHONY: clean
 clean:
-	rm -f bin/$(NAME)
-	rm -f $(COVERAGE_OUT)
-	rm -f $(COVERAGE_HTML)
+	rm -f bin/$(NAME) $(COVERAGE_OUT) $(COVERAGE_HTML)
