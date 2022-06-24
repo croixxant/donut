@@ -2,25 +2,14 @@ package cmd
 
 import (
 	"io"
-	"os"
 
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 
 	"github.com/croixxant/donut/app"
 )
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := newRootCmd(os.Stdout, os.Stderr).Execute(); err != nil {
-		pterm.Error.Println(err)
-		os.Exit(1)
-	}
-}
-
-// rootCmd represents the base command when called without any subcommands
-func newRootCmd(outStream, errStream io.Writer) *cobra.Command {
+// NewRootCmd represents the base command when called without any subcommands
+func NewRootCmd(outStream, errStream io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "donut",
 		Version:      GetVersion(),

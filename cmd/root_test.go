@@ -13,19 +13,6 @@ import (
 	"github.com/croixxant/donut/testutil"
 )
 
-func TestExecute(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "OK"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Execute()
-		})
-	}
-}
-
 func Test_InitCmd(t *testing.T) {
 	tests := []struct {
 		name      string
