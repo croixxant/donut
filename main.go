@@ -1,12 +1,12 @@
 package main
 
-import "github.com/croixxant/donut/cmd/donut"
+import "github.com/croixxant/donut/cmd"
 
 var version string
 
 func main() {
 	if len(version) > 0 {
-		donut.SetVersion(version)
+		cmd.SetVersion(version)
 	}
-	donut.Execute()
+	cmd.Execute()
 }
